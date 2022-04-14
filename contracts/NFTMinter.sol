@@ -10,10 +10,11 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 error WhitelistError();
 
-contract NFTMinter is ERC1155, AccessControl {
+contract Carbonis is ERC1155, AccessControl {
     // AccessControl roles
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
     uint256 public constant SHARES = 0;
     uint256 public constant MINTER = 1;
@@ -30,14 +31,23 @@ contract NFTMinter is ERC1155, AccessControl {
         _mint(msg.sender, SHARES, 1, "");
     }
 
-    // function newMinter(string memory tokenURI, uint256 amount)
-    //    public returns(uint256) {
-    //        uint256 newItemId = _tokenIds.current();
-    //        _mint(msg.sender, newItemId, amount, "");
-    //        _setTokenUri(newItemId, tokenURI);
-    //        _tokenIds.increment();
-    //        return newItemId;
-    //    }
+    function newMinter(
+        string memory tokenURI,
+        uint256 amount,
+        bytes memory minter_data,
+        address target
+    ) public returns (uint256) {
+        uint256 newItemId = _tokenIds.current();
+        _mint(target, newItemId, amount, "");
+        _minters_data[newItemId] = minter_data;
+        _tokenIds.increment();
+        return newItemId;
+    }
+
+    function setMintersData(uint256 id, bytes data) private returns (bytes) {
+        require(hasRole(ADMIN_ROLE, msg.sender));
+        _minters_data[id] = data;
+    }
 
     function throwError() external pure {
         revert WhitelistError();
